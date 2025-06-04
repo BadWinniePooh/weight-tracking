@@ -3,6 +3,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Alert } from "@/components/ui/Alert";
 import { FormInput } from "@/components/ui/FormInput";
 import { Button } from "@/components/ui/Button";
@@ -16,10 +17,10 @@ export default function Home() {
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  const primaryBorder = useThemeColor("Border", "Primary");
+  const [success, setSuccess] = useState<string | null>(null);  const primaryBorder = useThemeColor("Border", "Primary");
   const onSecondary = useThemeColor("On", "Secondary");
+  const primaryText = useThemeColor("Text", "Primary");
+  const primaryTextHover = useThemeColor("Text Hover", "Primary");
 
   // Redirect to login page if not authenticated
   useEffect(() => {
@@ -96,9 +97,7 @@ export default function Home() {
         <Alert variant="success" className="mb-4">
           {success}
         </Alert>
-      )}
-
-      <Card>
+      )}      <Card>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormInput
             type="number"
@@ -117,7 +116,6 @@ export default function Home() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add any relevant notes"
-            className={`w-full px-4 py-2 border rounded-md`}
           />
           <Button
             type="submit"
@@ -129,6 +127,17 @@ export default function Home() {
           </Button>
         </form>
       </Card>
+      
+      <div className="mt-6 text-center">
+        <p>
+          <Link href="/image-upload" className={`${primaryText} ${primaryTextHover} hover:underline flex items-center justify-center gap-1`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+            </svg>
+            Take a picture of your scale instead
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
