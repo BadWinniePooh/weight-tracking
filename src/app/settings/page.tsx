@@ -171,7 +171,7 @@ export default function SettingsPage() {  const [settings, setSettings] = useSta
           <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
             <p className="text-sm">
               The scale image analyzer uses AI to detect weight values from images. 
-              You can choose between OpenAI's Vision API or a locally hosted Ollama instance.
+              You can choose between OpenAI&apos;s Vision API or a locally hosted Ollama instance.
             </p>
           </div>
           

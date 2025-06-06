@@ -90,11 +90,10 @@ export default function ImageUploadPage() {
             </p>
             {aiProvider === "openai" && (
               <div className="mb-4">
-                <h3 className="font-medium mb-2">How to get your OpenAI API key:</h3>
-                <ol className="list-decimal list-inside space-y-1 text-sm">
+                <h3 className="font-medium mb-2">How to get your OpenAI API key:</h3>                <ol className="list-decimal list-inside space-y-1 text-sm">
                   <li>Sign up or log in to your OpenAI account at <a href="https://platform.openai.com" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a></li>
                   <li>Navigate to API keys in your account settings</li>
-                  <li>Click "Create new secret key" and copy the key</li>
+                  <li>Click &quot;Create new secret key&quot; and copy the key</li>
                   <li>Paste the key in your app settings</li>
                 </ol>
               </div>
@@ -284,18 +283,17 @@ export default function ImageUploadPage() {
       </h1>
       <p className="mb-6">
         Take a new picture or upload an existing photo of your bathroom scale
-        and we'll automatically detect the weight value.
+        and we&apos;ll automatically detect the weight value.
       </p>      {error && (
         <Alert variant="error" className="mb-4">
           <div>
             <p className="font-medium">{error}</p>
-            {error.includes('insufficient_quota') && (
-              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+            {error.includes('insufficient_quota') && (              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
                 <p className="font-medium">Your OpenAI account has reached its quota limit.</p>
                 <p>This usually happens when:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>You're using a free trial that has expired</li>
-                  <li>You've reached your monthly spending limit</li>
+                  <li>You&apos;re using a free trial that has expired</li>
+                  <li>You&apos;ve reached your monthly spending limit</li>
                   <li>Your billing information needs to be updated</li>
                 </ul>
                 <p className="mt-2">
@@ -310,24 +308,22 @@ export default function ImageUploadPage() {
                 </p>
               </div>
             )}
-            {error.includes('rate_limit_exceeded') && (
-              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+            {error.includes('rate_limit_exceeded') && (              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
                 <p className="font-medium">Rate limit exceeded</p>
-                <p>You've made too many requests in a short time. OpenAI limits how many requests you can make per minute.</p>
+                <p>You&apos;ve made too many requests in a short time. OpenAI limits how many requests you can make per minute.</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li>Wait 30-60 seconds before trying again</li>
                   <li>If you continue seeing this error, try again later</li>
                 </ul>
               </div>
             )}
-            {error.includes('invalid_api_key') && (
-              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+            {error.includes('invalid_api_key') && (              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
                 <p className="font-medium">Invalid API Key</p>
-                <p>The API key you've provided is not valid. This can happen if:</p>
+                <p>The API key you&apos;ve provided is not valid. This can happen if:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li>The key was not copied correctly or has extra characters</li>
                   <li>The key has been revoked or deleted from your OpenAI account</li>
-                  <li>The key doesn't have permission to use the required models</li>
+                  <li>The key doesn&apos;t have permission to use the required models</li>
                 </ul>
                 <p className="mt-2">
                   <Link 
@@ -339,25 +335,23 @@ export default function ImageUploadPage() {
                 </p>
               </div>
             )}
-            {error.includes('invalid_request_error') && (
-              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+            {error.includes('invalid_request_error') && (              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
                 <p className="font-medium">Invalid Request</p>
                 <p>There was a problem with the image you uploaded. This can happen if:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li>The image file is corrupted or in an unsupported format</li>
                   <li>The image is too large (maximum file size is 20MB)</li>
-                  <li>The image doesn't clearly show a weight scale display</li>
+                  <li>The image doesn&apos;t clearly show a weight scale display</li>
                 </ul>
                 <p>Try taking a clearer photo with good lighting, making sure the scale display is clearly visible.</p>
               </div>
             )}
-            {error.includes('model_not_found') && (
-              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+            {error.includes('model_not_found') && (              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
                 <p className="font-medium">Model Not Found</p>
-                <p>Your OpenAI account doesn't have access to the required model. This can happen if:</p>
+                <p>Your OpenAI account doesn&apos;t have access to the required model. This can happen if:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>You're using a new account that doesn't have access to GPT-4 Vision</li>
-                  <li>Your account tier doesn't include the required models</li>
+                  <li>You&apos;re using a new account that doesn&apos;t have access to GPT-4 Vision</li>
+                  <li>Your account tier doesn&apos;t include the required models</li>
                 </ul>
                 <p className="mt-2">
                   <a 
