@@ -11,7 +11,7 @@
     "check-deps-ign": "depcheck --ignores=\"postcss,tailwindcss,autoprefixer\" --skip-missing=true"
   },
   "dependencies": {
-    "@prisma/client": "^6.7.0",
+    "@prisma/client": "^6.9.0",
     "@radix-ui/react-slot": "^1.2.2",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.9",
