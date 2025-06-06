@@ -14,6 +14,7 @@ export default function SettingsPage() {  const [settings, setSettings] = useSta
     carbFatRatio: "0.6",
     bufferValue: "0.0075",
     openaiApiKey: "",
+    aiProvider: "openai",
   });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -31,12 +32,13 @@ export default function SettingsPage() {  const [settings, setSettings] = useSta
         const response = await fetch("/api/settings");
         if (response.ok) {
           const data = await response.json();
-          if (data.settings) {
-            setSettings({
-              weightGoal: data.settings.weightGoal?.toString() || "",              lossRate: data.settings.lossRate?.toString() || "0.0055",
+          if (data.settings) {              setSettings({
+              weightGoal: data.settings.weightGoal?.toString() || "",              
+              lossRate: data.settings.lossRate?.toString() || "0.0055",
               carbFatRatio: data.settings.carbFatRatio?.toString() || "0.6",
               bufferValue: data.settings.bufferValue?.toString() || "0.0075",
               openaiApiKey: data.settings.openaiApiKey || "",
+              aiProvider: data.settings.aiProvider || "openai",
             });
           }
         }
@@ -76,6 +78,7 @@ export default function SettingsPage() {  const [settings, setSettings] = useSta
             ? parseFloat(settings.bufferValue)
             : null,
           openaiApiKey: settings.openaiApiKey,
+          aiProvider: settings.aiProvider,
         }),
       });
 
@@ -167,28 +170,74 @@ export default function SettingsPage() {  const [settings, setSettings] = useSta
           <h3 className="font-medium mb-2">AI Image Analysis</h3>
           <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
             <p className="text-sm">
-              The scale image analyzer uses OpenAI's Vision API to detect weight values from images. 
-              You'll need your own API key from OpenAI to use this feature.
-            </p>
-            <p className="text-sm mt-2">
-              <Link href="https://platform.openai.com/api-keys" target="_blank" className="text-blue-600 dark:text-blue-400 underline">
-                Get an API key from OpenAI →
-              </Link>
+              The scale image analyzer uses AI to detect weight values from images. 
+              You can choose between OpenAI's Vision API or a locally hosted Ollama instance.
             </p>
           </div>
-          <FormInput
-            label="OpenAI API Key"
-            type="password"
-            name="openaiApiKey"
-            id="openaiApiKey"
-            value={settings.openaiApiKey}
-            onChange={handleChange}
-            placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-            description="Required for scale image analysis. Your API key is stored securely and used only for analyzing your scale images."
-          />
-          <div className="mt-2 text-xs text-gray-500">
-            <p>Note: Using the OpenAI API is a paid service. Check your <a href="https://platform.openai.com/account/usage" target="_blank" className="underline">usage</a> periodically.</p>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">AI Provider</label>
+            <div className="flex flex-col space-y-2">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="aiProvider"
+                  value="openai"
+                  checked={settings.aiProvider === "openai"}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                <span>OpenAI (requires API key)</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="aiProvider"
+                  value="ollama"
+                  checked={settings.aiProvider === "ollama"}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                <span>Local Ollama (llava:7b model)</span>
+              </label>
+            </div>
           </div>
+          
+          {settings.aiProvider === "openai" && (
+            <>
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                <p className="text-sm mt-2">
+                  <Link href="https://platform.openai.com/api-keys" target="_blank" className="text-blue-600 dark:text-blue-400 underline">
+                    Get an API key from OpenAI →
+                  </Link>
+                </p>
+              </div>
+              <FormInput
+                label="OpenAI API Key"
+                type="password"
+                name="openaiApiKey"
+                id="openaiApiKey"
+                value={settings.openaiApiKey}
+                onChange={handleChange}
+                placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+                description="Required for OpenAI. Your API key is stored securely and used only for analyzing your scale images."
+              />
+              <div className="mt-2 text-xs text-gray-500">
+                <p>Note: Using the OpenAI API is a paid service. Check your <a href="https://platform.openai.com/account/usage" target="_blank" className="underline">usage</a> periodically.</p>
+              </div>
+            </>
+          )}
+          
+          {settings.aiProvider === "ollama" && (
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
+              <p className="text-sm">
+                Using the local Ollama instance with llava:7b model at localhost:11434. No API key required.
+              </p>
+              <p className="text-sm mt-2">
+                Make sure your Ollama instance is running and has the llava:7b model installed.
+              </p>
+            </div>
+          )}
 
           <Button
             type="submit"

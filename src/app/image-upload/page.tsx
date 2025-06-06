@@ -23,6 +23,7 @@ export default function ImageUploadPage() {
   const [detectedWeight, setDetectedWeight] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
+  const [aiProvider, setAiProvider] = useState<string>("openai");
 
   const primaryBorder = useThemeColor("Border", "Primary");
   const onSecondary = useThemeColor("On", "Secondary");
@@ -33,16 +34,20 @@ export default function ImageUploadPage() {
   const hoverBorder = useThemeColor("Border Hover", "Assets");
   const assetFocusRing = useThemeColor("Focus Ring", "Assets");
   const primaryText = useThemeColor("Text", "Primary");
-  const primaryTextHover = useThemeColor("Text Hover", "Primary");
-  // Check if user has configured their OpenAI API key
+  const primaryTextHover = useThemeColor("Text Hover", "Primary");  // Check if user has configured their settings
   useEffect(() => {
-    async function checkApiKey() {
+    async function checkSettings() {
       if (session?.user?.id) {
         try {
           const response = await fetch("/api/settings");
           if (response.ok) {
             const data = await response.json();
-            setHasApiKey(!!data.settings?.openaiApiKey);
+            // Check if OpenAI is selected but no API key is provided
+            setAiProvider(data.settings?.aiProvider || "openai");
+            setHasApiKey(
+              data.settings?.aiProvider === "ollama" || 
+              !!data.settings?.openaiApiKey
+            );
           }
         } catch (error) {
           console.error("Error checking API key:", error);
@@ -50,7 +55,7 @@ export default function ImageUploadPage() {
       }
     }
     
-    checkApiKey();
+    checkSettings();
   }, [session]);
 
   // Redirect to login page if not authenticated
@@ -72,8 +77,7 @@ export default function ImageUploadPage() {
   if (!session) {
     return null;
   }
-  
-    // Show a message if the user hasn't set up their OpenAI API key
+    // Show a message if the user hasn't set up their AI provider
   if (hasApiKey === false) {
     return (
       <div>
@@ -83,20 +87,24 @@ export default function ImageUploadPage() {
         <Card>
           <div className="p-4">
             <Alert variant="error" className="mb-4">
-              OpenAI API Key Required
+              AI Provider Configuration Required
             </Alert>
             <p className="mb-4">
-              To use the image analysis feature, you need to add your OpenAI API key in the settings.
+              {aiProvider === "openai" 
+                ? "To use the image analysis feature with OpenAI, you need to add your API key in the settings."
+                : "There's an issue with your AI provider configuration. Please check your settings."}
             </p>
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">How to get your API key:</h3>
-              <ol className="list-decimal list-inside space-y-1 text-sm">
-                <li>Sign up or log in to your OpenAI account at <a href="https://platform.openai.com" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a></li>
-                <li>Navigate to API keys in your account settings</li>
-                <li>Click "Create new secret key" and copy the key</li>
-                <li>Paste the key in your app settings</li>
-              </ol>
-            </div>
+            {aiProvider === "openai" && (
+              <div className="mb-4">
+                <h3 className="font-medium mb-2">How to get your OpenAI API key:</h3>
+                <ol className="list-decimal list-inside space-y-1 text-sm">
+                  <li>Sign up or log in to your OpenAI account at <a href="https://platform.openai.com" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a></li>
+                  <li>Navigate to API keys in your account settings</li>
+                  <li>Click "Create new secret key" and copy the key</li>
+                  <li>Paste the key in your app settings</li>
+                </ol>
+              </div>
+            )}
             <Link href="/settings">
               <Button type="button">
                 Go to Settings
@@ -136,17 +144,17 @@ export default function ImageUploadPage() {
       // Process the image with the real OpenAI Vision API
       await processImageWithVisionAPI(file);
     }
-  };
-  const processImageWithVisionAPI = async (file: File) => {
+  };  const processImageWithVisionAPI = async (file: File) => {
     setIsProcessing(true);
     
     try {
       // Use the utility function to analyze the image
-      const weight = await analyzeScaleImage(file);
+      const result = await analyzeScaleImage(file);
       
       // Set the detected weight with one decimal place
-      setDetectedWeight(weight.toFixed(1));
-      setSuccess("Weight detected from image!");
+      setDetectedWeight(result.weight.toFixed(1));
+      setAiProvider(result.provider);
+      setSuccess(`Weight detected from image using ${result.provider}!`);
     } catch (error) {
       console.error("Error analyzing image:", error);
       
@@ -157,7 +165,7 @@ export default function ImageUploadPage() {
         
         // Handle specific error codes from OpenAI
         if (errorCode === "insufficient_quota" || errorCode === "billing_hard_limit_reached") {
-          setError(`OpenAI API quota exceeded. Please check your account billing at OpenAI website.`);
+          setError(`API quota exceeded. Please check your account billing.`);
         } else if (errorCode === "rate_limit_exceeded") {
           setError(`Rate limit exceeded. Please wait a moment and try again.`);
         } else if (errorCode === "invalid_api_key") {
@@ -469,9 +477,7 @@ export default function ImageUploadPage() {
                   fill
                   style={{ objectFit: "contain" }}
                 />
-              </div>
-
-              {detectedWeight && (
+              </div>              {detectedWeight && (
                 <div>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -484,10 +490,15 @@ export default function ImageUploadPage() {
                         onChange={(e) => setDetectedWeight(e.target.value)}
                         required
                       />
-                      <p className="text-xs mt-1">
-                        You can edit this value if the detection is not
-                        accurate.
-                      </p>
+                      <div className="flex justify-between">
+                        <p className="text-xs mt-1">
+                          You can edit this value if the detection is not
+                          accurate.
+                        </p>
+                        <p className="text-xs mt-1 font-medium">
+                          Analyzed with: <span className="font-bold">{aiProvider === "ollama" ? "Ollama (local)" : "OpenAI"}</span>
+                        </p>
+                      </div>
                     </div>
 
                     <FormInput

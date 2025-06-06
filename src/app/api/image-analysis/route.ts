@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
+import { analyzeImageWithOllama } from "@/lib/ollama";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,29 +12,25 @@ export async function POST(request: NextRequest) {
     // If not authenticated, return unauthorized
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    
-    // Get the user's API key from their settings
+    }    // Get the user's settings
     const userSettings = await prisma.userSettings.findUnique({
       where: {
         userId: session.user.id,
       },
       select: {
         openaiApiKey: true,
+        aiProvider: true,
       },
     });
     
-    if (!userSettings?.openaiApiKey) {
+    const aiProvider = userSettings?.aiProvider || "openai";
+    
+    // Check if using OpenAI but no API key provided
+    if (aiProvider === "openai" && !userSettings?.openaiApiKey) {
       return NextResponse.json(
         { error: "OpenAI API key not found in your settings. Please add your API key in the Settings page." },
         { status: 400 }
-      );
-    }
-    
-    // Initialize OpenAI client with the user's API key
-    const openai = new OpenAI({
-      apiKey: userSettings.openaiApiKey,
-    });
+      );    }
     
     // Parse the multipart form data
     const formData = await request.formData();
@@ -49,35 +46,59 @@ export async function POST(request: NextRequest) {
     // Convert the file to a base64 data URL
     const bytes = await imageFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64Image = buffer.toString("base64");
-    const dataUrl = `data:${imageFile.type};base64,${base64Image}`;
+    const base64Image = buffer.toString("base64");    const dataUrl = `data:${imageFile.type};base64,${base64Image}`;
     
-    // Call OpenAI Vision API to analyze the scale image
-    const response = await openai.chat.completions.create({
-      //model: "gpt-4.1",
-      model: "gpt-3.5-turbo",
-      max_tokens: 300,
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant that reads weights from bathroom scale displays. Extract ONLY the weight value as a number (with decimal point if present). Return ONLY the number, nothing else. If you can't find a weight, reply with 'No weight detected'."
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "What is the weight shown on this scale display? Please extract just the number." },
-            { 
-              type: "image_url",
-              image_url: {
-                url: dataUrl,
-              },
+    let resultText: string;
+    
+    // Use the selected AI provider
+    if (aiProvider === "ollama") {
+      // Use Ollama for image analysis
+      try {
+        resultText = await analyzeImageWithOllama(base64Image);
+      } catch (error: any) {
+        return NextResponse.json(
+          { error: `Ollama API error: ${error.message}` },
+          { status: 500 }
+        );
+      }
+    } else {
+      // Use OpenAI for image analysis
+      const openai = new OpenAI({
+        apiKey: userSettings?.openaiApiKey || "",
+      });
+      
+      try {
+        const response = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          max_tokens: 300,
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful assistant that reads weights from bathroom scale displays. Extract ONLY the weight value as a number (with decimal point if present). Return ONLY the number, nothing else. If you can't find a weight, reply with 'No weight detected'."
+            },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "What is the weight shown on this scale display? Please extract just the number." },
+                { 
+                  type: "image_url",
+                  image_url: {
+                    url: dataUrl,
+                  },
+                },
+              ],
             },
           ],
-        },
-      ],
-    });
-
-    const resultText = response.choices[0]?.message?.content || "No weight detected";
+        });
+        
+        resultText = response.choices[0]?.message?.content || "No weight detected";
+      } catch (error: any) {
+        return NextResponse.json(
+          { error: `OpenAI API error: ${error.message}` },
+          { status: 500 }
+        );
+      }
+    }
     
     // Try to extract a valid number from the result
     const weightMatch = resultText.match(/\b\d+(\.\d+)?\b/);
@@ -92,13 +113,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       weight: detectedWeight,
-      rawResponse: resultText 
-    });  } catch (error: any) {
-    console.error("Error processing image:", error);
+      rawResponse: resultText,
+      provider: aiProvider
+    });  } catch (error: any) {    console.error("Error processing image:", error);
     
-    // Extract error information from OpenAI API error response
+    // Extract error information from API response
     let errorMessage = "Error processing image";
     let errorCode = null;
+    let providerInfo = "";
     
     if (error?.response?.data?.error) {
       // Handle standard OpenAI API error format

@@ -39,11 +39,13 @@ export async function GET() {
           lossRate: settings.lossRate ?? DEFAULT_LOSS_RATE,
           carbFatRatio: settings.carbFatRatio ?? DEFAULT_CARB_FAT_RATIO,
           bufferValue: settings.bufferValue ?? DEFAULT_BUFFER_VALUE,
+          aiProvider: settings.aiProvider ?? "openai",
         }
       : {
           lossRate: DEFAULT_LOSS_RATE,
           carbFatRatio: DEFAULT_CARB_FAT_RATIO,
           bufferValue: DEFAULT_BUFFER_VALUE,
+          aiProvider: "openai",
         };
 
     return NextResponse.json({ settings: responseSettings });
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
       carbFatRatio = DEFAULT_CARB_FAT_RATIO,
       bufferValue = DEFAULT_BUFFER_VALUE,
       openaiApiKey,
+      aiProvider = "openai",
     } = await req.json();
 
     // Find user by email
@@ -95,6 +98,7 @@ export async function POST(req: NextRequest) {
         carbFatRatio,
         bufferValue,
         openaiApiKey,
+        aiProvider,
       },
       create: {
         userId: user.id,
@@ -103,6 +107,7 @@ export async function POST(req: NextRequest) {
         carbFatRatio,
         bufferValue,
         openaiApiKey,
+        aiProvider,
       },
     });
 

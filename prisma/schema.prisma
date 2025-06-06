@@ -45,6 +45,7 @@ model UserSettings {
   carbFatRatio    Float?
   bufferValue     Float?
   openaiApiKey    String?
+  aiProvider      String? @default("openai")
   userId          String  @unique
   user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

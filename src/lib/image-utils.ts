@@ -1,9 +1,9 @@
 // Helper functions for image processing and analysis
 
 /**
- * Uploads an image file to the server and analyzes it using OpenAI Vision API
+ * Uploads an image file to the server and analyzes it using the configured AI provider
  * @param imageFile - The image file to upload
- * @returns The detected weight value
+ * @returns The detected weight and provider information
  */
 /**
  * Custom error type for image analysis with error code
@@ -18,7 +18,13 @@ export class ImageAnalysisError extends Error {
   }
 }
 
-export async function analyzeScaleImage(imageFile: File): Promise<number> {
+export interface ImageAnalysisResult {
+  weight: number;
+  provider: string;
+  rawResponse?: string;
+}
+
+export async function analyzeScaleImage(imageFile: File): Promise<ImageAnalysisResult> {
   try {
     // Create form data for the API request
     const formData = new FormData();
@@ -38,9 +44,12 @@ export async function analyzeScaleImage(imageFile: File): Promise<number> {
         data.errorCode || null
       );
     }
-    
-    const result = await response.json();
-    return result.weight;
+      const result = await response.json();
+    return {
+      weight: result.weight,
+      provider: result.provider || 'openai',
+      rawResponse: result.rawResponse
+    };
   } catch (error) {
     console.error("Image analysis error:", error);
     

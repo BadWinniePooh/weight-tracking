@@ -53,6 +53,8 @@ Currently, deployment requires basic knowledge of Docker and Docker Compose as t
 - **Data Import**: Import weight data from Excel files (see [Import/Export](#data-importexport) section)
 - **Dark Mode**: Support for light and dark themes
 - **User Settings**: Customize application behavior and display preferences
+- **AI Image Analysis**: Upload photos of scale displays for automatic weight detection
+- **Flexible AI Provider Options**: Choose between OpenAI Vision API or local Ollama for image analysis
 
 ## Screenshots
 
