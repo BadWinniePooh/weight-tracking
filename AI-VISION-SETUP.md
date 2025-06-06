@@ -4,16 +4,13 @@ This application allows users to track their weight by manually entering data or
 
 ## Setting Up OpenAI Vision API Integration
 
-To use the AI image analysis feature, you need to set up your OpenAI API key:
+To use the AI image analysis feature, each user needs to set up their own OpenAI API key:
 
 1. Sign up for an OpenAI account at [https://platform.openai.com/signup](https://platform.openai.com/signup)
 2. Create an API key at [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 3. Copy your API key
-4. In the root directory of the project, add your API key to the `.env.local` file:
-   ```
-   OPENAI_API_KEY="your-openai-api-key-here"
-   ```
-5. Restart the development server if it's running
+4. In the application, navigate to the Settings page
+5. Paste your API key in the "OpenAI API Key" field and save your settings
 
 ## Development
 

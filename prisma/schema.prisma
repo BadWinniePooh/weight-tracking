@@ -39,11 +39,12 @@ model UserEntry {
 
 // Model for user settings
 model UserSettings {
-  id           String  @id @default(uuid())
-  weightGoal   Float?
-  lossRate     Float?
-  carbFatRatio Float?
-  bufferValue  Float?
-  userId       String  @unique
-  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String  @id @default(uuid())
+  weightGoal      Float?
+  lossRate        Float?
+  carbFatRatio    Float?
+  bufferValue     Float?
+  openaiApiKey    String?
+  userId          String  @unique
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

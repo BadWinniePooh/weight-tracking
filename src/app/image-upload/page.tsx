@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useRef } from "react";
+import { useState, FormEvent, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -22,6 +22,7 @@ export default function ImageUploadPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [detectedWeight, setDetectedWeight] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
   const primaryBorder = useThemeColor("Border", "Primary");
   const onSecondary = useThemeColor("On", "Secondary");
@@ -33,6 +34,24 @@ export default function ImageUploadPage() {
   const assetFocusRing = useThemeColor("Focus Ring", "Assets");
   const primaryText = useThemeColor("Text", "Primary");
   const primaryTextHover = useThemeColor("Text Hover", "Primary");
+  // Check if user has configured their OpenAI API key
+  useEffect(() => {
+    async function checkApiKey() {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch("/api/settings");
+          if (response.ok) {
+            const data = await response.json();
+            setHasApiKey(!!data.settings?.openaiApiKey);
+          }
+        } catch (error) {
+          console.error("Error checking API key:", error);
+        }
+      }
+    }
+    
+    checkApiKey();
+  }, [session]);
 
   // Redirect to login page if not authenticated
   if (status === "unauthenticated") {
@@ -49,10 +68,43 @@ export default function ImageUploadPage() {
       </div>
     );
   }
-
   // Don't render content if not authenticated
   if (!session) {
     return null;
+  }
+  
+  // Show a message if the user hasn't set up their OpenAI API key
+  if (hasApiKey === false) {
+    return (
+      <div>
+        <h1 className={`text-2xl font-bold mb-6 ${onSecondary}`}>
+          Scale Image Upload
+        </h1>
+        <Card>
+          <div className="p-4">
+            <Alert variant="error" className="mb-4">
+              OpenAI API Key Required
+            </Alert>
+            <p className="mb-4">
+              To use the image analysis feature, you need to add your OpenAI API key in the settings.
+            </p>
+            <Link href="/settings">
+              <Button type="button">
+                Go to Settings
+              </Button>
+            </Link>
+          </div>
+        </Card>
+        <div className="mt-8">
+          <Link
+            href="/"
+            className={`${primaryText} ${primaryTextHover} hover:underline`}
+          >
+            ← Back to manual data entry
+          </Link>
+        </div>
+      </div>
+    );
   }
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -76,7 +128,6 @@ export default function ImageUploadPage() {
       await processImageWithVisionAPI(file);
     }
   };
-
   const processImageWithVisionAPI = async (file: File) => {
     setIsProcessing(true);
     
@@ -89,7 +140,14 @@ export default function ImageUploadPage() {
       setSuccess("Weight detected from image!");
     } catch (error) {
       console.error("Error analyzing image:", error);
-      setError(error instanceof Error ? error.message : "Failed to analyze image");
+      const errorMessage = error instanceof Error ? error.message : "Failed to analyze image";
+      
+      // Check if the error is related to missing API key
+      if (errorMessage.includes("API key") || errorMessage.includes("OpenAI")) {
+        setHasApiKey(false);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsProcessing(false);
     }

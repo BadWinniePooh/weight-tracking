@@ -8,12 +8,12 @@ import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import Link from "next/link";
 
-export default function SettingsPage() {
-  const [settings, setSettings] = useState({
+export default function SettingsPage() {  const [settings, setSettings] = useState({
     weightGoal: "",
     lossRate: "0.0055",
     carbFatRatio: "0.6",
     bufferValue: "0.0075",
+    openaiApiKey: "",
   });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -33,10 +33,10 @@ export default function SettingsPage() {
           const data = await response.json();
           if (data.settings) {
             setSettings({
-              weightGoal: data.settings.weightGoal?.toString() || "",
-              lossRate: data.settings.lossRate?.toString() || "0.0055",
+              weightGoal: data.settings.weightGoal?.toString() || "",              lossRate: data.settings.lossRate?.toString() || "0.0055",
               carbFatRatio: data.settings.carbFatRatio?.toString() || "0.6",
               bufferValue: data.settings.bufferValue?.toString() || "0.0075",
+              openaiApiKey: data.settings.openaiApiKey || "",
             });
           }
         }
@@ -72,10 +72,10 @@ export default function SettingsPage() {
           lossRate: settings.lossRate ? parseFloat(settings.lossRate) : null,
           carbFatRatio: settings.carbFatRatio
             ? parseFloat(settings.carbFatRatio)
-            : null,
-          bufferValue: settings.bufferValue
+            : null,          bufferValue: settings.bufferValue
             ? parseFloat(settings.bufferValue)
             : null,
+          openaiApiKey: settings.openaiApiKey,
         }),
       });
 
@@ -162,7 +162,20 @@ export default function SettingsPage() {
             value={settings.bufferValue}
             onChange={handleChange}
             placeholder="Enter buffer value"
-            description="Buffer value for your weight loss calculations"
+            description="Buffer value for your weight loss calculations"          />
+
+          <hr className="my-6 border-gray-200 dark:border-gray-700" />
+          
+          <h3 className="font-medium mb-2">AI Image Analysis</h3>
+          <FormInput
+            label="OpenAI API Key"
+            type="password"
+            name="openaiApiKey"
+            id="openaiApiKey"
+            value={settings.openaiApiKey}
+            onChange={handleChange}
+            placeholder="Enter your OpenAI API key"
+            description="Required for scale image analysis. Your API key is stored securely and used only for analyzing your scale images."
           />
 
           <Button

@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +12,28 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    
+    // Get the user's API key from their settings
+    const userSettings = await prisma.userSettings.findUnique({
+      where: {
+        userId: session.user.id,
+      },
+      select: {
+        openaiApiKey: true,
+      },
+    });
+    
+    if (!userSettings?.openaiApiKey) {
+      return NextResponse.json(
+        { error: "OpenAI API key not found in your settings. Please add your API key in the Settings page." },
+        { status: 400 }
+      );
+    }
+    
+    // Initialize OpenAI client with the user's API key
+    const openai = new OpenAI({
+      apiKey: userSettings.openaiApiKey,
+    });
     
     // Parse the multipart form data
     const formData = await request.formData();

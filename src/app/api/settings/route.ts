@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
       lossRate = DEFAULT_LOSS_RATE,
       carbFatRatio = DEFAULT_CARB_FAT_RATIO,
       bufferValue = DEFAULT_BUFFER_VALUE,
+      openaiApiKey,
     } = await req.json();
 
     // Find user by email
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
         lossRate,
         carbFatRatio,
         bufferValue,
+        openaiApiKey,
       },
       create: {
         userId: user.id,
@@ -100,6 +102,7 @@ export async function POST(req: NextRequest) {
         lossRate,
         carbFatRatio,
         bufferValue,
+        openaiApiKey,
       },
     });
 
