@@ -18,6 +18,16 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+  
+  ai:
+    image: ollama/ollama:latest
+    container_name: weight-tracking-ai
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama-entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
 
 volumes:
   weight-data:
