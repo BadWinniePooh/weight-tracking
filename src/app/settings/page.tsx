@@ -162,11 +162,20 @@ export default function SettingsPage() {  const [settings, setSettings] = useSta
             value={settings.bufferValue}
             onChange={handleChange}
             placeholder="Enter buffer value"
-            description="Buffer value for your weight loss calculations"          />
-
-          <hr className="my-6 border-gray-200 dark:border-gray-700" />
+            description="Buffer value for your weight loss calculations"          />          <hr className="my-6 border-gray-200 dark:border-gray-700" />
           
           <h3 className="font-medium mb-2">AI Image Analysis</h3>
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+            <p className="text-sm">
+              The scale image analyzer uses OpenAI's Vision API to detect weight values from images. 
+              You'll need your own API key from OpenAI to use this feature.
+            </p>
+            <p className="text-sm mt-2">
+              <Link href="https://platform.openai.com/api-keys" target="_blank" className="text-blue-600 dark:text-blue-400 underline">
+                Get an API key from OpenAI →
+              </Link>
+            </p>
+          </div>
           <FormInput
             label="OpenAI API Key"
             type="password"
@@ -174,9 +183,12 @@ export default function SettingsPage() {  const [settings, setSettings] = useSta
             id="openaiApiKey"
             value={settings.openaiApiKey}
             onChange={handleChange}
-            placeholder="Enter your OpenAI API key"
+            placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
             description="Required for scale image analysis. Your API key is stored securely and used only for analyzing your scale images."
           />
+          <div className="mt-2 text-xs text-gray-500">
+            <p>Note: Using the OpenAI API is a paid service. Check your <a href="https://platform.openai.com/account/usage" target="_blank" className="underline">usage</a> periodically.</p>
+          </div>
 
           <Button
             type="submit"
