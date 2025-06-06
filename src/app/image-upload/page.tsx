@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormInput } from "@/components/ui/FormInput";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { analyzeScaleImage } from "@/lib/image-utils";
+import { analyzeScaleImage, ImageAnalysisError } from "@/lib/image-utils";
 
 export default function ImageUploadPage() {
   const { data: session, status } = useSession();
@@ -73,7 +73,7 @@ export default function ImageUploadPage() {
     return null;
   }
   
-  // Show a message if the user hasn't set up their OpenAI API key
+    // Show a message if the user hasn't set up their OpenAI API key
   if (hasApiKey === false) {
     return (
       <div>
@@ -88,6 +88,15 @@ export default function ImageUploadPage() {
             <p className="mb-4">
               To use the image analysis feature, you need to add your OpenAI API key in the settings.
             </p>
+            <div className="mb-4">
+              <h3 className="font-medium mb-2">How to get your API key:</h3>
+              <ol className="list-decimal list-inside space-y-1 text-sm">
+                <li>Sign up or log in to your OpenAI account at <a href="https://platform.openai.com" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a></li>
+                <li>Navigate to API keys in your account settings</li>
+                <li>Click "Create new secret key" and copy the key</li>
+                <li>Paste the key in your app settings</li>
+              </ol>
+            </div>
             <Link href="/settings">
               <Button type="button">
                 Go to Settings
@@ -140,13 +149,39 @@ export default function ImageUploadPage() {
       setSuccess("Weight detected from image!");
     } catch (error) {
       console.error("Error analyzing image:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to analyze image";
       
-      // Check if the error is related to missing API key
-      if (errorMessage.includes("API key") || errorMessage.includes("OpenAI")) {
-        setHasApiKey(false);
+      // Check if it's our custom error type with an error code
+      if (error instanceof ImageAnalysisError) {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        
+        // Handle specific error codes from OpenAI
+        if (errorCode === "insufficient_quota" || errorCode === "billing_hard_limit_reached") {
+          setError(`OpenAI API quota exceeded. Please check your account billing at OpenAI website.`);
+        } else if (errorCode === "rate_limit_exceeded") {
+          setError(`Rate limit exceeded. Please wait a moment and try again.`);
+        } else if (errorCode === "invalid_api_key") {
+          setError(`Invalid API key. Please update your API key in settings.`);
+          setHasApiKey(false);
+        } else if (errorCode === "invalid_request_error") {
+          setError(`Invalid image format or content. Please try a clearer image of your scale.`);
+        } else if (errorMessage.includes("API key") || errorMessage.toLowerCase().includes("openai")) {
+          // Check if the error is related to missing API key
+          setHasApiKey(false);
+        } else {
+          // For other codes, show both message and code
+          setError(errorCode ? `${errorMessage} (Error: ${errorCode})` : errorMessage);
+        }
       } else {
-        setError(errorMessage);
+        // Fallback for regular errors
+        const errorMessage = error instanceof Error ? error.message : "Failed to analyze image";
+        
+        // Check if the error is related to missing API key
+        if (errorMessage.includes("API key") || errorMessage.toLowerCase().includes("openai")) {
+          setHasApiKey(false);
+        } else {
+          setError(errorMessage);
+        }
       }
     } finally {
       setIsProcessing(false);
@@ -248,10 +283,93 @@ export default function ImageUploadPage() {
       <p className="mb-6">
         Take a new picture or upload an existing photo of your bathroom scale
         and we'll automatically detect the weight value.
-      </p>
-      {error && (
+      </p>      {error && (
         <Alert variant="error" className="mb-4">
-          {error}
+          <div>
+            <p className="font-medium">{error}</p>
+            {error.includes('insufficient_quota') && (
+              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+                <p className="font-medium">Your OpenAI account has reached its quota limit.</p>
+                <p>This usually happens when:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>You're using a free trial that has expired</li>
+                  <li>You've reached your monthly spending limit</li>
+                  <li>Your billing information needs to be updated</li>
+                </ul>
+                <p className="mt-2">
+                  <a 
+                    href="https://platform.openai.com/account/billing" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    View your OpenAI billing settings →
+                  </a>
+                </p>
+              </div>
+            )}
+            {error.includes('rate_limit_exceeded') && (
+              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+                <p className="font-medium">Rate limit exceeded</p>
+                <p>You've made too many requests in a short time. OpenAI limits how many requests you can make per minute.</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Wait 30-60 seconds before trying again</li>
+                  <li>If you continue seeing this error, try again later</li>
+                </ul>
+              </div>
+            )}
+            {error.includes('invalid_api_key') && (
+              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+                <p className="font-medium">Invalid API Key</p>
+                <p>The API key you've provided is not valid. This can happen if:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>The key was not copied correctly or has extra characters</li>
+                  <li>The key has been revoked or deleted from your OpenAI account</li>
+                  <li>The key doesn't have permission to use the required models</li>
+                </ul>
+                <p className="mt-2">
+                  <Link 
+                    href="/settings" 
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    Update your API key in Settings →
+                  </Link>
+                </p>
+              </div>
+            )}
+            {error.includes('invalid_request_error') && (
+              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+                <p className="font-medium">Invalid Request</p>
+                <p>There was a problem with the image you uploaded. This can happen if:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>The image file is corrupted or in an unsupported format</li>
+                  <li>The image is too large (maximum file size is 20MB)</li>
+                  <li>The image doesn't clearly show a weight scale display</li>
+                </ul>
+                <p>Try taking a clearer photo with good lighting, making sure the scale display is clearly visible.</p>
+              </div>
+            )}
+            {error.includes('model_not_found') && (
+              <div className="mt-2 text-sm space-y-2 bg-red-50 p-3 rounded-md border border-red-100">
+                <p className="font-medium">Model Not Found</p>
+                <p>Your OpenAI account doesn't have access to the required model. This can happen if:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>You're using a new account that doesn't have access to GPT-4 Vision</li>
+                  <li>Your account tier doesn't include the required models</li>
+                </ul>
+                <p className="mt-2">
+                  <a 
+                    href="https://platform.openai.com/account" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    Check your OpenAI account status →
+                  </a>
+                </p>
+              </div>
+            )}
+          </div>
         </Alert>
       )}
       {success && (

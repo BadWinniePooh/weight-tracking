@@ -93,12 +93,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       weight: detectedWeight,
       rawResponse: resultText 
-    });
-  } catch (error) {
+    });  } catch (error: any) {
     console.error("Error processing image:", error);
+    
+    // Extract error information from OpenAI API error response
+    let errorMessage = "Error processing image";
+    let errorCode = null;
+    
+    if (error?.response?.data?.error) {
+      // Handle standard OpenAI API error format
+      const apiError = error.response.data.error;
+      errorCode = apiError.code || apiError.type;
+      errorMessage = apiError.message || errorMessage;
+    } else if (error?.error?.code) {
+      // Handle alternative error structure
+      errorCode = error.error.code;
+      errorMessage = error.error.message || errorMessage;
+    } else if (error?.code) {
+      // Handle direct error code
+      errorCode = error.code;
+      errorMessage = error.message || errorMessage;
+    } else if (typeof error === 'object' && error !== null) {
+      // Try to extract any useful information from the error object
+      errorCode = error.code || error.type || error.status;
+      errorMessage = error.message || error.error || errorMessage;
+    }
+    
+    // Return detailed error information
     return NextResponse.json(
-      { error: "Error processing image" },
-      { status: 500 }
+      { 
+        error: errorMessage,
+        errorCode: errorCode
+      },
+      { status: error.status || 500 }
     );
   }
 }

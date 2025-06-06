@@ -27,3 +27,17 @@ npm run dev
 - The OpenAI Vision API is a paid service. Check OpenAI's pricing page for current rates.
 - The application includes rate limiting to prevent excessive API usage.
 - For testing purposes, you can use sample scale images.
+
+## Error Handling
+
+The application provides detailed error messages when OpenAI API requests fail:
+
+### Common Error Codes
+
+- `insufficient_quota`: Your OpenAI account has reached its quota limit or billing threshold.
+- `rate_limit_exceeded`: Too many requests in a short period of time.
+- `invalid_api_key`: The API key provided is not valid or has been revoked.
+- `invalid_request_error`: The image format is invalid or too large.
+- `model_not_found`: Your account doesn't have access to the required model.
+
+Each error comes with helpful information on how to resolve the issue.

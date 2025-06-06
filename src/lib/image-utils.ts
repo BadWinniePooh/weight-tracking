@@ -5,6 +5,19 @@
  * @param imageFile - The image file to upload
  * @returns The detected weight value
  */
+/**
+ * Custom error type for image analysis with error code
+ */
+export class ImageAnalysisError extends Error {
+  code: string | null;
+  
+  constructor(message: string, code: string | null = null) {
+    super(message);
+    this.name = 'ImageAnalysisError';
+    this.code = code;
+  }
+}
+
 export async function analyzeScaleImage(imageFile: File): Promise<number> {
   try {
     // Create form data for the API request
@@ -19,13 +32,27 @@ export async function analyzeScaleImage(imageFile: File): Promise<number> {
     
     if (!response.ok) {
       const data = await response.json();
-      throw new Error(data.error || "Failed to analyze image");
+      // Throw a custom error with the error code if available
+      throw new ImageAnalysisError(
+        data.error || "Failed to analyze image", 
+        data.errorCode || null
+      );
     }
     
     const result = await response.json();
     return result.weight;
   } catch (error) {
     console.error("Image analysis error:", error);
-    throw error;
+    
+    // If it's already our custom error type, just re-throw it
+    if (error instanceof ImageAnalysisError) {
+      throw error;
+    }
+    
+    // Otherwise wrap it in our custom error
+    throw new ImageAnalysisError(
+      error instanceof Error ? error.message : "Unknown error occurred",
+      null
+    );
   }
 }
