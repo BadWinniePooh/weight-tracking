@@ -55,9 +55,10 @@ export async function POST(request: NextRequest) {
       // Use Ollama for image analysis
       try {
         resultText = await analyzeImageWithOllama(base64Image);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-          { error: `Ollama API error: ${error.message}` },
+          { error: `Ollama API error: ${errorMsg}` },
           { status: 500 }
         );
       }
@@ -90,11 +91,11 @@ export async function POST(request: NextRequest) {
             },
           ],
         });
-        
-        resultText = response.choices[0]?.message?.content || "No weight detected";
-      } catch (error: any) {
+          resultText = response.choices[0]?.message?.content || "No weight detected";
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-          { error: `OpenAI API error: ${error.message}` },
+          { error: `OpenAI API error: ${errorMsg}` },
           { status: 500 }
         );
       }
@@ -111,34 +112,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ 
-      weight: detectedWeight,
+    return NextResponse.json({      weight: detectedWeight,
       rawResponse: resultText,
       provider: aiProvider
-    });  } catch (error: any) {    console.error("Error processing image:", error);
+    });  } catch (error: unknown) {    console.error("Error processing image:", error);
     
     // Extract error information from API response
     let errorMessage = "Error processing image";
-    let errorCode = null;
-    let providerInfo = "";
+    let errorCode: string | null = null;
+    let statusCode = 500;
     
-    if (error?.response?.data?.error) {
-      // Handle standard OpenAI API error format
-      const apiError = error.response.data.error;
-      errorCode = apiError.code || apiError.type;
-      errorMessage = apiError.message || errorMessage;
-    } else if (error?.error?.code) {
-      // Handle alternative error structure
-      errorCode = error.error.code;
-      errorMessage = error.error.message || errorMessage;
-    } else if (error?.code) {
-      // Handle direct error code
-      errorCode = error.code;
-      errorMessage = error.message || errorMessage;
-    } else if (typeof error === 'object' && error !== null) {
-      // Try to extract any useful information from the error object
-      errorCode = error.code || error.type || error.status;
-      errorMessage = error.message || error.error || errorMessage;
+    // Type guard to handle OpenAI-like API errors
+    interface OpenAIErrorResponse {
+      response?: { data?: { error?: { code?: string; type?: string; message?: string } } };
+      error?: { code?: string; message?: string };
+      code?: string;
+      message?: string;
+      type?: string;
+      status?: number;
+    }
+    
+    if (typeof error === 'object' && error !== null) {
+      const err = error as OpenAIErrorResponse;
+      
+      if (err.response?.data?.error) {
+        // Handle standard OpenAI API error format
+        const apiError = err.response.data.error;
+        errorCode = apiError.code || apiError.type || null;
+        errorMessage = apiError.message || errorMessage;
+      } else if (err.error?.code) {
+        // Handle alternative error structure
+        errorCode = err.error.code || null;
+        errorMessage = err.error.message || errorMessage;
+      } else if (err.code) {
+        // Handle direct error code
+        errorCode = err.code;
+        errorMessage = err.message || errorMessage;
+      } else {
+        // Try to extract any useful information from the error object
+        errorCode = err.code || err.type || (err.status ? String(err.status) : null);
+        errorMessage = err.message || errorMessage;
+      }
+      
+      // Try to get status code if available
+      if (err.status) {
+        statusCode = err.status;
+      }
     }
     
     // Return detailed error information
@@ -147,7 +166,7 @@ export async function POST(request: NextRequest) {
         error: errorMessage,
         errorCode: errorCode
       },
-      { status: error.status || 500 }
+      { status: statusCode }
     );
   }
 }

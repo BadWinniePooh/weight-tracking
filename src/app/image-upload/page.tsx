@@ -27,12 +27,6 @@ export default function ImageUploadPage() {
 
   const primaryBorder = useThemeColor("Border", "Primary");
   const onSecondary = useThemeColor("On", "Secondary");
-  const fileBackground = useThemeColor("Background", "File");
-  const fileText = useThemeColor("Text", "File");
-  const fileHoverBackground = useThemeColor("Hover Background", "File");
-  const fileHoverText = useThemeColor("Hover Text", "File");
-  const hoverBorder = useThemeColor("Border Hover", "Assets");
-  const assetFocusRing = useThemeColor("Focus Ring", "Assets");
   const primaryText = useThemeColor("Text", "Primary");
   const primaryTextHover = useThemeColor("Text Hover", "Primary");  // Check if user has configured their settings
   useEffect(() => {
