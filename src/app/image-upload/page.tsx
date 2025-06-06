@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormInput } from "@/components/ui/FormInput";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { analyzeScaleImage } from "@/lib/image-utils";
 
 export default function ImageUploadPage() {
   const { data: session, status } = useSession();
@@ -53,8 +54,7 @@ export default function ImageUploadPage() {
   if (!session) {
     return null;
   }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     setSuccess(null);
     setDetectedWeight(null);
@@ -72,22 +72,27 @@ export default function ImageUploadPage() {
       const imageUrl = URL.createObjectURL(file);
       setImage(imageUrl);
 
-      // Simulate weight detection (in a real app, this would be done via API)
-      simulateWeightDetection();
+      // Process the image with the real OpenAI Vision API
+      await processImageWithVisionAPI(file);
     }
   };
 
-  const simulateWeightDetection = () => {
+  const processImageWithVisionAPI = async (file: File) => {
     setIsProcessing(true);
-
-    // Simulate a delay to mimic API processing
-    setTimeout(() => {
-      // Generate a random weight between 70 and 100 with one decimal place
-      const randomWeight = (Math.random() * 30 + 70).toFixed(1);
-      setDetectedWeight(randomWeight);
-      setIsProcessing(false);
+    
+    try {
+      // Use the utility function to analyze the image
+      const weight = await analyzeScaleImage(file);
+      
+      // Set the detected weight with one decimal place
+      setDetectedWeight(weight.toFixed(1));
       setSuccess("Weight detected from image!");
-    }, 1500);
+    } catch (error) {
+      console.error("Error analyzing image:", error);
+      setError(error instanceof Error ? error.message : "Failed to analyze image");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -269,14 +274,13 @@ export default function ImageUploadPage() {
                 Choose from Gallery
               </Button>
             </div>
-          </div>
-
-          {isProcessing && !detectedWeight && (
+          </div>          {isProcessing && !detectedWeight && (
             <div className="flex flex-col items-center justify-center py-4">
               <div
                 className={`animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 ${primaryBorder} mb-2`}
               ></div>
-              <p>Processing image...</p>
+              <p>Processing image with AI vision analysis...</p>
+              <p className="text-xs text-gray-500 mt-1">This may take a few seconds</p>
             </div>
           )}
 
