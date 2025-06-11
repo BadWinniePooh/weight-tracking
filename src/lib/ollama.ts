@@ -24,9 +24,9 @@ export async function analyzeImageWithOllama(imageBase64: string): Promise<strin
   //const prompt = "What is the weight shown on this scale display? Extract ONLY the weight value as a number (with decimal point if present). Return ONLY the number, nothing else. If you can't find a weight, reply with 'No weight detected'.";
   //const prompt = "What number do you see in the image? Extract ONLY the number value with decimal point if present. Return ONLY the number, nothing else. If you can't find a number, reply with 'No weight detected'."
   const prompt = "What do you see in the image?"
-  
-  try {
-    const response = await fetch("http://localhost:11434/api/generate", {
+    try {
+    // Use the Docker service name "ai" instead of localhost to connect to the Ollama container
+    const response = await fetch("http://ai:11434/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
