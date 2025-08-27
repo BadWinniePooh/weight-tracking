@@ -1,13 +1,27 @@
 import { compare } from 'bcryptjs';
-import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 
 // Mock dependencies
 jest.mock('bcryptjs');
-jest.mock('@/lib/prisma');
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    user: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
+    userSettings: {
+      findUnique: jest.fn(),
+      upsert: jest.fn(),
+    },
+    entry: {
+      findMany: jest.fn(),
+      create: jest.fn(),
+    },
+  },
+}));
 
 const mockCompare = compare as jest.MockedFunction<typeof compare>;
-const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
 describe('Auth Configuration', () => {
   beforeEach(() => {
@@ -30,7 +44,8 @@ describe('Auth Configuration', () => {
     });
 
     it('should return null when user is not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      const { prisma } = require('@/lib/prisma');
+      prisma.user.findUnique.mockResolvedValue(null);
 
       const result = await authorize({
         username: 'nonexistent',
@@ -38,12 +53,13 @@ describe('Auth Configuration', () => {
       });
 
       expect(result).toBeNull();
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { username: 'nonexistent' },
       });
     });
 
     it('should return null when password is incorrect', async () => {
+      const { prisma } = require('@/lib/prisma');
       const mockUser = {
         id: 'user-id',
         username: 'testuser',
@@ -51,7 +67,7 @@ describe('Auth Configuration', () => {
         passwordHash: 'hashed-password',
       };
 
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser as any);
+      prisma.user.findUnique.mockResolvedValue(mockUser as any);
       mockCompare.mockResolvedValue(false);
 
       const result = await authorize({
@@ -64,6 +80,7 @@ describe('Auth Configuration', () => {
     });
 
     it('should return user when credentials are valid', async () => {
+      const { prisma } = require('@/lib/prisma');
       const mockUser = {
         id: 'user-id',
         username: 'testuser',
@@ -71,7 +88,7 @@ describe('Auth Configuration', () => {
         passwordHash: 'hashed-password',
       };
 
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser as any);
+      prisma.user.findUnique.mockResolvedValue(mockUser as any);
       mockCompare.mockResolvedValue(true);
 
       const result = await authorize({
@@ -88,7 +105,8 @@ describe('Auth Configuration', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      mockPrisma.user.findUnique.mockRejectedValue(new Error('Database error'));
+      const { prisma } = require('@/lib/prisma');
+      prisma.user.findUnique.mockRejectedValue(new Error('Database error'));
 
       const result = await authorize({
         username: 'testuser',

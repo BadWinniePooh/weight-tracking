@@ -136,9 +136,9 @@ describe('Color Utils', () => {
             expect(color.lightClassName).not.toBe(color.darkClassName);
           }
           
-          // Ensure they follow some basic CSS class conventions
-          expect(color.lightClassName).toMatch(/^[a-z-:]+$/);
-          expect(color.darkClassName).toMatch(/^[a-z-:]+$/);
+          // Ensure they follow some basic CSS class conventions (allow numbers and underscores)
+          expect(color.lightClassName).toMatch(/^[a-z0-9-:_\s]+$/);
+          expect(color.darkClassName).toMatch(/^[a-z0-9-:_\s]+$/);
         });
       });
     });

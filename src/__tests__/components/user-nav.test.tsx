@@ -15,18 +15,19 @@ const mockSignOut = signOut as jest.MockedFunction<typeof signOut>;
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 
 const mockPush = jest.fn();
+const mockRouter = {
+  push: mockPush,
+  replace: jest.fn(),
+  prefetch: jest.fn(),
+  back: jest.fn(),
+  forward: jest.fn(),
+  refresh: jest.fn(),
+};
 
 describe('UserNav Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseRouter.mockReturnValue({
-      push: mockPush,
-      replace: jest.fn(),
-      prefetch: jest.fn(),
-      back: jest.fn(),
-      forward: jest.fn(),
-      refresh: jest.fn(),
-    } as any);
+    mockUseRouter.mockReturnValue(mockRouter as any);
     mockSignOut.mockResolvedValue(undefined as any);
   });
 
