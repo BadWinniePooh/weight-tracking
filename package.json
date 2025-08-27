@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "check-deps": "depcheck",
-    "check-deps-ign": "depcheck --ignores=\"postcss,tailwindcss,autoprefixer\" --skip-missing=true"
+    "check-deps-ign": "depcheck --ignores=\"postcss,tailwindcss,autoprefixer\" --skip-missing=true",
+    "verify-build": "./scripts/verify-build.sh"
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
@@ -24,7 +25,7 @@
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
