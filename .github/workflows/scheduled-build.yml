@@ -1,0 +1,91 @@
+name: Scheduled Build Verification
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC to check if the project is still buildable
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual triggering for testing
+  push:
+    branches: [ main ]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'Dockerfile'
+      - 'prisma/**'
+      - '.github/workflows/scheduled-build.yml'
+
+jobs:
+  build-verification:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [22]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Setup database environment
+      run: |
+        echo "DATABASE_URL=file:./prisma/test.db" >> $GITHUB_ENV
+        echo "NEXTAUTH_SECRET=test-secret-for-ci-build-verification" >> $GITHUB_ENV
+        echo "NEXTAUTH_URL=http://localhost:3000" >> $GITHUB_ENV
+        echo "NODE_ENV=development" >> $GITHUB_ENV
+    
+    - name: Generate Prisma client
+      run: npx prisma generate
+    
+    - name: Run database migrations
+      run: npx prisma migrate deploy
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Verify TypeScript compilation
+      run: npx tsc --noEmit
+    
+    - name: Build Next.js application
+      run: npm run build
+    
+    - name: Verify Docker build
+      run: |
+        echo "Building Docker image..."
+        docker build -t weight-tracking-test .
+        echo "Docker build completed successfully"
+        echo "Verifying image was created..."
+        docker images weight-tracking-test
+    
+    - name: Test basic import functionality
+      run: |
+        echo "Testing Node.js module resolution..."
+        node -e "
+          try {
+            console.log('Testing Next.js import...');
+            require('next');
+            console.log('Testing Prisma import...');
+            require('@prisma/client');
+            console.log('Testing React import...');
+            require('react');
+            console.log('All critical dependencies can be imported successfully');
+          } catch (error) {
+            console.error('Import test failed:', error.message);
+            process.exit(1);
+          }
+        "
+    
+    - name: Cleanup test artifacts
+      if: always()
+      run: |
+        rm -f ./prisma/test.db*
+        docker rmi weight-tracking-test || true

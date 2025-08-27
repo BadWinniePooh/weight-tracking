@@ -254,6 +254,22 @@ Future development plans include in no particular order:
 4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
+### Continuous Integration
+
+This project includes automated CI/CD pipelines to ensure code quality and buildability:
+
+- **Build and Test**: Runs on every push and pull request to verify that the code builds successfully, passes linting, and TypeScript compilation.
+- **Scheduled Build Verification**: Runs daily to ensure the project remains buildable over time as dependencies and the ecosystem evolve.
+
+Both pipelines test:
+- Dependency installation
+- Prisma client generation
+- Database migrations
+- ESLint linting
+- TypeScript compilation
+- Next.js build process
+- Docker containerization (scheduled pipeline only)
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
