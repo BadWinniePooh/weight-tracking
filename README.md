@@ -270,6 +270,16 @@ Both pipelines test:
 - Next.js build process
 - Docker containerization (scheduled pipeline only)
 
+#### Local Build Verification
+
+To run the same checks locally that are performed in CI:
+
+```bash
+./scripts/verify-build.sh
+```
+
+This script will run all the build verification steps and ensure your local environment matches the CI requirements.
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "check-deps": "depcheck",
-    "check-deps-ign": "depcheck --ignores=\"postcss,tailwindcss,autoprefixer\" --skip-missing=true"
+    "check-deps-ign": "depcheck --ignores=\"postcss,tailwindcss,autoprefixer\" --skip-missing=true",
+    "verify-build": "./scripts/verify-build.sh"
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
