@@ -1,7 +1,10 @@
 FROM node:22-alpine AS base
 
-# Install dependencies for Prisma
-RUN apk add --no-cache libc6-compat openssl wget
+# Install dependencies for Prisma and native modules
+RUN apk add --no-cache libc6-compat openssl wget python3 make g++
+
+# Update npm to latest version
+RUN npm install -g npm@latest
 
 # Set the working directory
 WORKDIR /app
@@ -10,14 +13,16 @@ WORKDIR /app
 FROM base AS deps
 COPY package*.json ./
 RUN npm ci
+# Rebuild native modules for Alpine Linux
+RUN npm rebuild better-sqlite3 --build-from-source
 
 # Build stage
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client using the locally installed version
+RUN npm exec prisma generate
 
 # Build the Next.js application
 RUN npm run build
@@ -40,10 +45,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Copy Prisma files
+# Copy Prisma files and all dependencies needed for migrations
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/src/generated ./src/generated
+
+# Copy properly compiled node_modules from deps stage (not builder)
+# This ensures native modules like better-sqlite3 are compiled for Alpine
+COPY --from=deps /app/node_modules ./node_modules
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh ./
