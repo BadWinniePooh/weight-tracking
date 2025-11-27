@@ -3,6 +3,9 @@ FROM node:22-alpine AS base
 # Install dependencies for Prisma and native modules
 RUN apk add --no-cache libc6-compat openssl wget python3 make g++
 
+# Update npm to latest version
+RUN npm install -g npm@latest
+
 # Set the working directory
 WORKDIR /app
 
