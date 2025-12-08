@@ -12,7 +12,7 @@ export function Footer() {
         className={`container mx-auto p-4 text-center text-sm ${secondaryText}`}
       >
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <div>&copy; {new Date().getFullYear()} ScaleTrack</div>
+          <div>&copy; {new Date().getFullYear()} ScaleTrack v0.3.1</div>
           <div className="mt-2 md:mt-0">
             Track your progress, achieve your goals
           </div>
