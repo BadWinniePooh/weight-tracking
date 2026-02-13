@@ -50,6 +50,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# build & scan reports
+slim.report.json
+
 # Created by https://www.toptal.com/developers/gitignore/api/yarn,jetbrains+all,webstorm+all,nextjs,visualstudio,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=yarn,jetbrains+all,webstorm+all,nextjs,visualstudio,visualstudiocode
 
