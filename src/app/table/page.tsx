@@ -164,16 +164,23 @@ export default function TablePage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Data Table</h1>
 
-        {entries.length > 0 && (
-          <Button
-            onClick={() => setShowDeleteConfirm(true)}
-            variant="danger"
-            disabled={isDeleting}
-            isLoading={isDeleting}
-          >
-            Delete All
-          </Button>
-        )}
+        <div className="flex gap-2">
+          <a href="/api/entries/export" download>
+            <Button variant="outline" disabled={loading}>
+              Export CSV
+            </Button>
+          </a>
+          {entries.length > 0 && (
+            <Button
+              onClick={() => setShowDeleteConfirm(true)}
+              variant="danger"
+              disabled={isDeleting}
+              isLoading={isDeleting}
+            >
+              Delete All
+            </Button>
+          )}
+        </div>
       </div>
 
       {entries.length === 0 ? (
